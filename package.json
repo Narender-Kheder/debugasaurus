@@ -23,6 +23,16 @@
       {
         "command": "debugasourus.startChat",
         "title": "Start Chat Interface"
+      },
+      {
+        "command": "debugasourus.triggerCustomCompletion",
+        "title": "Trigger Custom Completion"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "debugasourus.triggerCustomCompletion",
+        "key": "cmd+ctrl+a"
       }
     ]
   },
