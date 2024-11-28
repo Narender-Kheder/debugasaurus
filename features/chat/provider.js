@@ -4,6 +4,7 @@ const chatInterface = require('./chatInterface.js')
 
 function provider (context) {
   return vscode.commands.registerCommand('debugasourus.startChat', () => {
+    const editor = vscode.window.activeTextEditor
     const panel = vscode.window.createWebviewPanel(
       'chatInterface',
       'Chat Interface',
@@ -16,7 +17,7 @@ function provider (context) {
       async message => {
         if (message.command === 'sendMessage') {
           const userMessage = message.text
-          const response = await llm.queryLLM(userMessage)
+          const response = await llm.queryLLM(userMessage,  editor.document)
           panel.webview.postMessage({
             command: 'receiveMessage',
             text: response

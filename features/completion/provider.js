@@ -1,5 +1,5 @@
 const vscode = require('vscode')
-const llm = require('./llmagent.js')
+const llm = require('./llmAgent.js')
 
 const provider = vscode.commands.registerCommand(
   'debugasourus.triggerCustomCompletion',
