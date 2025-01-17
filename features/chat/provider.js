@@ -11,7 +11,7 @@ function provider (context) {
       vscode.ViewColumn.Two,
       { enableScripts: true }
     )
-    panel.webview.html = chatInterface.getWebviewContent()
+    panel.webview.html = chatInterface.loadHTML('./chatInterface.html')
 
     panel.webview.onDidReceiveMessage(
       async message => {

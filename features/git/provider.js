@@ -4,7 +4,8 @@ const gitError = require('./gitError.js')
 const provider = vscode.commands.registerCommand(
   'debugasourus.checkGitErrors',
   async function () {
-    await gitError.checkGitErrors()
+    console.log("\n\n\n")
+    console.log(await gitError.checkGitErrors())
   }
 )
 
