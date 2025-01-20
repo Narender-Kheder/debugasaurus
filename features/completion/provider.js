@@ -21,8 +21,6 @@ const provider = vscode.commands.registerCommand(
       ) + '(<-- user is here)'
     )
 
-    console.log('   aiSuggestion: ' + aiSuggestion)
-
     const completionItems = [
       {
         label: 'Debugasourus suggestion:  ',
@@ -37,10 +35,7 @@ const provider = vscode.commands.registerCommand(
     vscode.window
       .showQuickPick(completionItems, { placeHolder: 'Choose a completion' })
       .then(selected => {
-        if (!selected || selected.label == 'Cancel') {
-          console.log('Debugasourus Cancel')
-          return
-        }
+        if (!selected || selected.label == 'Cancel') return      
         editor.insertSnippet(new vscode.SnippetString(selected.description))
       })
   }

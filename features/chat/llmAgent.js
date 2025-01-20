@@ -1,27 +1,80 @@
 const utils = require('../../uitls')
 const git = require('../git')
+const aiPrompts = require('../prompts.json')
 
-async function queryLLM (userMessage, document) { 
+let history = ''
 
-    const systemMessage = "You are a coding companion. You are given code, and your job is to answer the users question. DO NOT answer with any topic other then code or programming. You may answer regarding the code or any code related topic. If you are asked to generate ore code, please provide it in a clear fashion, do not explain. \n Here is the code input:\n"
-    
-    const code = document.getText()
+async function queryLLM (userMessage, document) {
+  const prompts = aiPrompts.chat
+  const code = document.getText()
 
-    let userPrompt = systemMessage + code
+  const userIntent = await utils.queryLLM(
+    prompts.classifier +
+      userMessage +
+      '\n\n\n\n Here is the users code file for context:' +
+      code
+  )
 
-    try {
-        userPrompt += "You will be provided the users git status. You must answer any questions the user has about git and their git status.\nHere is the users git status:" + await git.checkGitErrors()
-    } catch (error) {
-        console.log("git check for llm didnt work")
-    }
+  console.log('\n' + userIntent + '\n')
 
-    userPrompt+= "\n\nUse the data above to answer this users question:\n"+ userMessage
+  let userPrompt = prompts.system_prompt + code
 
-    console.log(userPrompt)
-    
-    return utils.queryLLM(userPrompt)
+  switch (userIntent) {
+    case 'CLARIFICATION':
+      return await clarification(prompts, userMessage, code)
+    case 'GENERATION':
+      return await generation(prompts, userMessage, document)
+    case 'GIT':
+      return await gitCheck(prompts, userMessage)
+    case 'REGULAR':
+      return await clarification(prompts, userMessage, document)
+    default:
+      return await clarification(prompts, userMessage, document)
+  }
 }
 
-module.exports={
-    queryLLM
+async function clarification (prompts, userMessage, code) {
+  let userPrompt =
+    prompts.system_prompt + code + addHistory() + addUserQuestion(userMessage)
+
+  return askLLM(userPrompt, userMessage)
+}
+
+async function generation (prompts, userMessage, document) { //expand so the ai can change the file for the user
+  return clarification(prompts, userMessage, document.getText()) // to be changed
+}
+
+async function gitCheck (prompts, userMessage) { //expand so the ai can do the git stuff for the user
+  let userPrompt = prompts.git_system_prompt
+  try {
+    userPrompt += await git.checkGitErrors()
+  } catch (error) {
+    console.log('git check for llm didnt work')
+  }
+  userPrompt += addHistory() + addUserQuestion(userMessage)
+
+  return askLLM(userPrompt, userMessage)
+}
+
+async function askLLM (prompt, userMessage) {
+  const aiResponse = await utils.queryLLM(prompt)
+  updateHistory(userMessage, aiPrompts)
+  return aiResponse
+}
+
+function addHistory () {
+  return '\nHere is the current chat history:\n' + history
+}
+function updateHistory (userMessage, aiResponse) {
+  history +=
+    'USER MESSAGE:' + userMessage + '\n' + 'AI MESSAGE:' + aiResponse + '\n\n'
+}
+function addUserQuestion (userMessage) {
+  return (
+    '\n\n\nUse the data above to answer this users question:\n' + userMessage
+  )
+}
+
+module.exports = {
+  queryLLM
 }
