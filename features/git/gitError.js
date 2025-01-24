@@ -1,61 +1,78 @@
 const vscode = require('vscode')
 
-async function checkGitErrors () {
-  console.log('Lets start the git check extension')
-  const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports
+async function checkGitErrors() {
+  let resultSummary = "Git Check Summary:\n";
+  
+  resultSummary += "Let's start the git check extension\n";
+
+  const gitExtension = vscode.extensions.getExtension("vscode.git")?.exports;
   if (!gitExtension) {
-    vscode.window.showErrorMessage('Git extension not found')
-    return
+    vscode.window.showErrorMessage("Git extension not found");
+    resultSummary += "Error: Git extension not found\n";
+    return resultSummary;
   }
 
-  const api = gitExtension.getAPI(1)
-  const repo = api.repositories[0]
+  const api = gitExtension.getAPI(1);
+  const repo = api.repositories[0];
 
   if (!repo) {
-    vscode.window.showErrorMessage('No Git repository found')
-    return
+    vscode.window.showErrorMessage("No Git repository found");
+    resultSummary += "Error: No Git repository found\n";
+    return resultSummary;
   }
 
   try {
     // Check for uncommitted changes
-    const status = await repo.state.workingTreeChanges
+    const status = await repo.state.workingTreeChanges;
     if (status.length > 0) {
-      console.log(
-        'There are uncommitted changes in your repository.'
-      )
+      const message = "There are uncommitted changes in your repository.";
+      resultSummary += message + "\n";
+    } else {
+      resultSummary += "No uncommitted changes found.\n";
     }
 
     // Check for merge conflicts
-    const mergeChanges = status.filter(change => change.status === 12) // 12 represents merge conflicts
+    const mergeChanges = status.filter((change) => change.status === 12); // 12 represents merge conflicts
     if (mergeChanges.length > 0) {
-      vscode.window.showErrorMessage(
-        'There are merge conflicts in your repository.'
-      )
+      const message = "There are merge conflicts in your repository.";
+      vscode.window.showErrorMessage(message);
+      resultSummary += message + "\n";
+    } else {
+      resultSummary += "No merge conflicts found.\n";
     }
 
-     // Check for unpushed commits
-     const head = repo.state.HEAD;
+    // Check for unpushed commits
+    const head = repo.state.HEAD;
     if (head) {
       const refs = await repo.getRefs();
-      const upstream = refs.find(ref => 
-       ref.type === 2 && // 2 represents RemoteHead
-        ref.name === `origin/${head.name}`
+      const upstream = refs.find(
+        (ref) =>
+          ref.type === 2 && // 2 represents RemoteHead
+          ref.name === `origin/${head.name}`
       );
-      
+
       if (!upstream) {
-        console.log('The current branch has no upstream branch.');
+        const message = "The current branch has no upstream branch.";
+        resultSummary += message + "\n";
       } else if (head.commit !== upstream.commit) {
-        console.log('There are unpushed commits in your repository.');
+        const message = "There are unpushed commits in your repository.";
+        resultSummary += message + "\n";
+      } else {
+        resultSummary += "No unpushed commits found.\n";
       }
     } else {
-      console.log('Unable to determine the current HEAD.');
+      const message = "Unable to determine the current HEAD.";
+      resultSummary += message + "\n";
     }
-
-    // You can add more checks here as needed
   } catch (error) {
-    vscode.window.showErrorMessage(`Git error: ${error.message}`)
+    const errorMessage = `Git error: ${error.message}`;
+    vscode.window.showErrorMessage(errorMessage);
+    resultSummary += errorMessage + "\n";
   }
+
+  return resultSummary;
 }
+
 
 module.exports = {
   checkGitErrors
