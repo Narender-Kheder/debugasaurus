@@ -6,6 +6,8 @@ let apiKey = ''
 async function queryLLM (userMessage) {
   if (!apiKey) return `Error: DEBUGASAURUS_OPENAI_API_KEY is not found.`
   try {
+    const apiKey = ''
+      // Replace with your API key or else it won't work
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
