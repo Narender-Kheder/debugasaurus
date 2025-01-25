@@ -2,8 +2,8 @@ const axios = require('axios');
 
 async function queryLLM (userMessage) {
   try {
-    const apiKey =
-      '' // Replace with your API key or else it won't work
+    const apiKey = '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'
+      // Replace with your API key or else it won't work
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {

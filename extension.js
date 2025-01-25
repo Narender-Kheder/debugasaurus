@@ -13,9 +13,8 @@ function activate (context) {
   context.subscriptions.push(completions.provider, chat.provider(context), git.provider)
 }
 
-function deactivate () {}
+
 
 module.exports = {
   activate,
-  deactivate
 }
