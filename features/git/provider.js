@@ -1,5 +1,5 @@
 const vscode = require('vscode')
-const gitError = require('./gitError.js')
+const gitError = require('./llmAgent.js')
 
 const provider = vscode.commands.registerCommand(
   'debugasourus.checkGitErrors',

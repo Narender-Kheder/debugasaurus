@@ -1,5 +1,4 @@
 const path = require('path')
-
 const vscode = require('vscode')
 const llm = require('./llmAgent.js')
 const chatInterface = require('./chatInterface.js')
@@ -44,10 +43,19 @@ function provider (context) {
       async message => {
         if (message.command === 'sendMessage') {
           const userMessage = message.text
-          const response = await llm.queryLLM(userMessage, editor.document)
+          const {aiResponse,metadata} = await llm.queryLLM(userMessage, editor.document)
           panel.webview.postMessage({
             command: 'receiveMessage',
-            text: response
+            text: aiResponse,
+            metadata: metadata
+          })
+        }
+        else if (message.command === 'runGitCommand'){
+          const aiGitCommand = message.aiGitCommand
+          const aiResponse = await llm.runGitCommand(aiGitCommand)
+          panel.webview.postMessage({
+            command: 'receiveMessage',
+            text: aiResponse
           })
         }
       },
