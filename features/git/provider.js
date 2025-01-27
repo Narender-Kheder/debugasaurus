@@ -1,10 +1,11 @@
 const vscode = require('vscode')
-const gitError = require('./gitError.js')
+const gitError = require('./llmAgent.js')
 
 const provider = vscode.commands.registerCommand(
   'debugasourus.checkGitErrors',
   async function () {
-    await gitError.checkGitErrors()
+    console.log("\n\n\n")
+    console.log(await gitError.checkGitErrors())
   }
 )
 
