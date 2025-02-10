@@ -75,8 +75,22 @@ function addUserQuestion (userMessage) {
     '\n\n\nUse the data above to answer this users question:\n' + userMessage
   )
 }
+async function loadApiKey() {
+  await utils.loadApiKey()
+}
+
+async function uploadApiKey (key) {
+  await utils.uploadApiKey(key)
+}
+
+function apiKeyLoaded() {
+  return utils.apiKeyLoaded()
+}
 
 module.exports = {
   queryLLM,
-  runGitCommand
+  runGitCommand,
+  loadApiKey,
+  apiKeyLoaded,
+  uploadApiKey
 }

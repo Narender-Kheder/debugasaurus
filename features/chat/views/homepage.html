@@ -1,66 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Debugasourus</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      background-color: #000000;
-      color: white;
-      justify-content: center;
-      align-items: center;
-    }
-    .image-container {
-      width: 300px;
-      height: 300px; 
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    h1 {
-      margin: 0;
-      font-size: 32px;
-    }
-    button {
-      padding: 10px 20px;
-      margin-top: 20px;
-      background-color: #1e90ff;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #1c7fdd;
-    }
-  </style>
-</head>
-<body>
-  <div class="image-container">
-    <img src="IMAGE_PATH" alt="Debugasourus Image">
-  </div>
-  <h1>Debugasourus</h1>
-  <button id="rawrButton">Let's Prawrrr-gram!</button>
-  <script>
-    const vscode = acquireVsCodeApi();
-    
-    document.getElementById('rawrButton').addEventListener('click', function() {
-      vscode.postMessage({ command: 'switchView', view: 'chatInterface' });
-    });
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debugasourus</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background-color: #000000;
+        color: white;
+        justify-content: center;
+        align-items: center;
+      }
+      .image-container {
+        width: 300px;
+        height: 300px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      h1 {
+        margin: 0;
+        font-size: 32px;
+      }
+      button {
+        padding: 10px 20px;
+        margin-top: 20px;
+        background-color: #1e90ff;
+        color: white;
+        font-size: 18px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #1c7fdd;
+      }
+      button:disabled {
+        background-color: grey;
+        cursor: not-allowed;
+      }
+      /* Error message container */
+      .error-container {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid red;
+        border-radius: 10px;
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        align-items: center;
+        width: 80%;
+        max-width: 400px;
+      }
+      .error-message {
+        width: 80%;
+        color: red;
+        margin-bottom: 10px;
+      }
+      textarea {
+        width: 100%;
+        height: 20px;
+        resize: none;
+        margin-bottom: 10px;
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      button:disabled {
+        background-color: grey;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="image-container">
+      <img src="IMAGE_PATH" alt="Debugasourus Image" />
+    </div>
+    <h1>Debugasourus</h1>
+    <button id="rawrButton">Let's Prawrrr-gram!</button>
+
+    <!-- Error container div -->
+    <div class="error-container" id="errorContainer">
+      <p class="error-message" id="errorMessage"></p>
+      <textarea
+        id="apikeyEntry"
+        placeholder="Enter DEBUGASAURUS_OPENAI_API_KEY..."
+      ></textarea>
+      <button id="dismissButton">Done</button>
+    </div>
+
+    <script>
+      const vscode = acquireVsCodeApi()
+      const button = document.getElementById('rawrButton')
+      const errorMessage = document.getElementById('errorMessage')
+      const errorContainer = document.getElementById('errorContainer')
+      const dismissButton = document.getElementById('dismissButton')
+      const apiKeyEntry = document.getElementById('apikeyEntry')
+
+      button.addEventListener('click', function () {
+        try {
+          vscode.postMessage({ command: 'switchView', view: 'chatInterface' })
+        } catch (error) {
+          showError(error.message)
+        }
+      })
+      dismissButton.addEventListener('click', function () {
+        vscode.postMessage({ command: 'apiKeyEntry', key: apiKeyEntry.value })
+        dismissButton.disabled = true
+      })
+
+      function showError(message = '') {
+        errorContainer.style.display = 'flex'
+        errorMessage.textContent = message
+        button.disabled = true
+        dismissButton.disabled = false
+      }
+      function closeError() {
+        errorContainer.style.display = 'none'
+        button.disabled = false
+      }
+
+      window.addEventListener('message', event => {
+        const message = event.data
+        if (message.command === 'detectedApiKey') {
+          console.log('METADATA: ', message.metadata)
+          if (!message.metadata.detectedApiKey) {
+            showError(
+              "Error: DEBUGASAURUS_OPENAI_API_KEY is not set. Please define it before proceeding. You can do so by entering it here or by running the command: \necho 'export DEBUGASAURUS_OPENAI_API_KEY=\"your-api-key-here\"' >> ~/.zshrc"
+            )
+          } else {
+            closeError()
+          }
+        }
+      })
+    </script>
+  </body>
 </html>
-
-
