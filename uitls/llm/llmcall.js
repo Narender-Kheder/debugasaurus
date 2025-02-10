@@ -40,7 +40,7 @@ async function uploadApiKey (key) {
   await apiKeyCheck()
   if (apiKeyLoaded())
     terminal.runCommand(
-      `printf '\nexport DEBUGASAURUS_OPENAI_API_KEY="${key}"\' >> ~/.zshrc && source ~/.zshrc`
+      `print '\nexport DEBUGASAURUS_OPENAI_API_KEY="${key}"\' >> ~/.zshrc && source ~/.zshrc`
     )
 }
 
