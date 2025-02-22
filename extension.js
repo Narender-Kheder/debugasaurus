@@ -10,11 +10,38 @@ const commentor = require('./features/comment')
  * @param {vscode.ExtensionContext} context
  */
 function activate (context) {
+  const treeDataProvider = new DebugasourusProvider();
+  vscode.window.registerTreeDataProvider("debugasourusTree", treeDataProvider);
   //let disposable = vscode.commands.registerCommand("debugasourus.refactorCode", refactorCode);
   //let disposable2 = vscode.commands.registerCommand("debugasourus.optimizeCode", optimizeCode);
   console.log('Congratulations, your extension "debugasourus" is now active!')
 
-  context.subscriptions.push(completions.provider, chat.provider(context), refactor.refactor, git.provider, optimizer.optimize, commentor.commentor);
+  context.subscriptions.push(completions.provider, chat.provider(context),refactor.refactor, git.provider, optimizer.optimize, commentor.commentor);
+}
+
+// Tree View Implementation
+class DebugasourusProvider {
+  getTreeItem(element) {
+    return element;
+  }
+
+  getChildren() {
+    return [
+      new DebugasourusItem("Check Git Errors", "debugasourus.checkGitErrors"),
+      new DebugasourusItem("Start Chat", "debugasourus.startChat"),
+      new DebugasourusItem("Complete Code", "debugasourus.triggerCustomCompletion"),
+      new DebugasourusItem("Generate Comments", "debugasourus.generateComments"),
+      new DebugasourusItem("Refactor Code", "debugasourus.refactorCode"),
+      new DebugasourusItem("Optimize Code", "debugasourus.optimizeCode")
+    ];
+  }
+}
+
+class DebugasourusItem extends vscode.TreeItem {
+  constructor(label, command) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.command = { command, title: label };
+  }
 }
 
 function deactivate() {}
