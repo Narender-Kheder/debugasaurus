@@ -37,8 +37,8 @@
         "title": "Optimize Code"
       },
       {
-        "command": "debugasourus.addDocstrings",
-        "title": "Generate Docstrings"
+        "command": "debugasourus.generateComments",
+        "title": "Generate Comments"
       }
     ],
     "keybindings": [
