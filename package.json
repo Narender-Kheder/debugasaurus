@@ -27,6 +27,18 @@
       {
         "command": "debugasourus.triggerCustomCompletion",
         "title": "Trigger Custom Completion"
+      },
+      {
+        "command": "debugasourus.refactorCode",
+        "title": "Refactor Code"
+      },
+      {
+        "command": "debugasourus.optimizeCode",
+        "title": "Optimize Code"
+      },
+      {
+        "command": "debugasourus.addDocstrings",
+        "title": "Generate Docstrings"
       }
     ],
     "keybindings": [
