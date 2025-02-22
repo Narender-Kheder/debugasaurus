@@ -15,6 +15,23 @@
   ],
   "main": "./extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "debugasourusView",
+          "title": "Debugasourus",
+          "icon": "resources/icon.png"
+        }
+      ]
+    },
+      "views": {
+    "debugasourusView": [
+      {
+        "id": "debugasourusTree",
+        "name": "Debugasourus Panel"
+      }
+    ]
+  },
     "commands": [
       {
         "command": "debugasourus.checkGitErrors",
