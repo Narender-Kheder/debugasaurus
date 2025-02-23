@@ -3,7 +3,8 @@ const vscode = require('vscode')
 const llm = require('./llmAgent.js')
 const chatInterface = require('./chatInterface.js')
 
-function provider (context) {
+async function provider (context) {
+  await llm.loadApiKey()
   return vscode.commands.registerCommand('debugasourus.startChat', () => {
     const editor = vscode.window.activeTextEditor
     const panel = vscode.window.createWebviewPanel(
@@ -18,24 +19,37 @@ function provider (context) {
         ]
       }
     )
-    panel.webview.html = chatInterface.loadHTML('./views/homepage.html').replace(
-      'IMAGE_PATH',
-      'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
-    )
+    panel.webview.html = chatInterface
+      .loadHTML('./views/homepage.html')
+      .replace(
+        'IMAGE_PATH',
+        'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
+      )
 
-    // Listen for messages from the webview
-    panel.webview.onDidReceiveMessage(message => {
+    panel.webview.postMessage({
+      command: 'detectedApiKey',
+      metadata: { detectedApiKey: llm.apiKeyLoaded() }
+    })
+
+    panel.webview.onDidReceiveMessage(async message =>{
       switch (message.command) {
         case 'switchView':
           if (message.view === 'chatInterface') {
-            panel.webview.html = chatInterface.loadHTML(
-              './views/chatInterface.html'
-            ).replace(
-              'IMAGE_PATH',
-              'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
-            )
+            panel.webview.html = chatInterface
+              .loadHTML('./views/chatInterface.html')
+              .replace(
+                'IMAGE_PATH',
+                'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
+              )
           }
           break
+        case 'apiKeyEntry':
+          console.log("here is the key"+message.key);
+          await llm.uploadApiKey(message.key)
+          panel.webview.postMessage({
+            command: 'detectedApiKey',
+            metadata: { detectedApiKey: llm.apiKeyLoaded() }
+          })
       }
     })
 
@@ -43,14 +57,16 @@ function provider (context) {
       async message => {
         if (message.command === 'sendMessage') {
           const userMessage = message.text
-          const {aiResponse,metadata} = await llm.queryLLM(userMessage, editor.document)
+          const { aiResponse, metadata } = await llm.queryLLM(
+            userMessage,
+            editor.document
+          )
           panel.webview.postMessage({
             command: 'receiveMessage',
             text: aiResponse,
             metadata: metadata
           })
-        }
-        else if (message.command === 'runGitCommand'){
+        } else if (message.command === 'runGitCommand') {
           const aiGitCommand = message.aiGitCommand
           const aiResponse = await llm.runGitCommand(aiGitCommand)
           panel.webview.postMessage({
