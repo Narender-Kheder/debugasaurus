@@ -15,6 +15,23 @@
   ],
   "main": "./extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "debugasourusView",
+          "title": "Debugasourus",
+          "icon": "resources/icon.png"
+        }
+      ]
+    },
+      "views": {
+    "debugasourusView": [
+      {
+        "id": "debugasourusTree",
+        "name": "Debugasourus Panel"
+      }
+    ]
+  },
     "commands": [
       {
         "command": "debugasourus.checkGitErrors",
@@ -27,6 +44,18 @@
       {
         "command": "debugasourus.triggerCustomCompletion",
         "title": "Trigger Custom Completion"
+      },
+      {
+        "command": "debugasourus.refactorCode",
+        "title": "Refactor Code"
+      },
+      {
+        "command": "debugasourus.optimizeCode",
+        "title": "Optimize Code"
+      },
+      {
+        "command": "debugasourus.generateComments",
+        "title": "Generate Comments"
       }
     ],
     "keybindings": [
@@ -50,7 +79,7 @@
     "eslint": "^9.13.0"
   },
   "dependencies": {
-    "axios": "^1.7.7",
+    "axios": "^1.7.9",
     "dotenv": "^16.4.7"
   },
   "files": [
