@@ -22,7 +22,7 @@ async function optimizeCode() {
         const optimizedCode = response.match(/```(?:python|js|c\+\+|java)?\n([\s\S]*?)```/)?.[1] || response;
 
         // Create the optimization comment
-        const optimizeComment = `\n// 🔧 Suggested Optimization:\n// ${optimizedCode.split("\n").join("\n// ")}\n// 🟢 Click 'Apply Optimization' below`;
+        const optimizeComment = `\n// 🔧 Suggested Optimization:\n// ${optimizedCode.split("\n").join("\n// ")}\n// 🟢`;
 
         // Insert the optimization comment in the editor
         editor.edit(editBuilder => {

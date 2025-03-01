@@ -22,7 +22,7 @@ async function refactorCode() {
         const refactoredCode = response.match(/```(?:python|js|c\+\+|java)?\n([\s\S]*?)```/)?.[1] || response;
 
         // Create the refactor comment
-        const refactorComment = `\n// 🔧 Suggested Refactor:\n// ${refactoredCode.split("\n").join("\n// ")}\n// 🟢 Click 'Apply Refactor' below`;
+        const refactorComment = `\n// 🔧 Suggested Refactor:\n// ${refactoredCode.split("\n").join("\n// ")}\n// 🟢`;
 
         // Insert the refactor comment in the editor
         editor.edit(editBuilder => {
