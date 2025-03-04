@@ -56,6 +56,10 @@
       {
         "command": "debugasourus.generateComments",
         "title": "Generate Comments"
+      },
+      {
+        "command": "debugasourus.debugCode",
+        "title": "Debug Python Code"
       }
     ],
     "keybindings": [
