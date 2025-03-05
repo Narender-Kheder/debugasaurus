@@ -6,7 +6,7 @@ const completions = require('./features/completion')
 const refactor = require('./features/refactoring')
 const optimizer = require('./features/optimization')
 const commentor = require('./features/comment')
-const debug = require('./features/debug')
+const {createDebuggingPanel} = require('./features/debug')
 /**
  * @param {vscode.ExtensionContext} context
  */
@@ -17,7 +17,7 @@ function activate (context) {
   //let disposable2 = vscode.commands.registerCommand("debugasourus.optimizeCode", optimizeCode);
   console.log('Congratulations, your extension "debugasourus" is now active!')
 
-  context.subscriptions.push(completions.provider, chat.provider(context),refactor.refactor, git.provider, optimizer.optimize, commentor.commentor, debug.createDebuggingPanel(context));
+  context.subscriptions.push(completions.provider, chat.provider(context),refactor.refactor, git.provider, optimizer.optimize, commentor.commentor, createDebuggingPanel(context));
 }
 
 // Tree View Implementation

@@ -1,7 +1,16 @@
+// Description: This file contains the code to create a debugging panel for Python code in the extension.
+// The debugging panel will display suggestions for debugging Python code based on the analysis of the code.
+
 const path = require('path');
 const vscode = require('vscode');
 const utils = require('../../uitls');
 
+// Send code to OpenAI API for analysis
+async function analyzeCode(code) {
+    const response = await utils.queryLLM(`Analyze the following Python code for syntax and runtime errors. Provide a list of identified issues and optional explanations for each:\n\n${code}`);
+    //console.log("OpenAI API Response:", JSON.stringify(response.data, null, 2)); // ✅ Debugging Output
+    return response.split('\n');
+  }
 // Create a new Webview Panel to display the debugging suggestions
 function createDebuggingPanel(context) {
     return vscode.commands.registerCommand('debugasourus.debugCode', () => {
@@ -13,14 +22,14 @@ function createDebuggingPanel(context) {
             enableScripts: true,
             }
         );
-
+        console.log("Debugging Panel Created"); // ✅ Debugging Output
         // Set the HTML content for the Webview
         panel.webview.html = getWebviewContent();
         
         // Analyze code when user activates the debugging feature
-        vscode.workspace.onDidSaveTextDocument((document) => {
+        vscode.workspace.onDidSaveTextDocument(async (document) => {
             if (document.languageId === 'python') {
-            analyzeCode(document.getText())
+                analyzeCode(document.getText())
                 .then(suggestions => {
                 panel.webview.postMessage({ suggestions });
                 })
@@ -29,18 +38,13 @@ function createDebuggingPanel(context) {
                 });
             }
         });
-    })
+    });
 }
 
-// Send code to OpenAI API for analysis
-async function analyzeCode(code) {
-  const response = await utils.queryLLM(`Analyze the following Python code for syntax and runtime errors. Provide a list of identified issues and optional explanations for each:\n\n${code}`);
-  return response.split('\n');
-}
 
 // Webview HTML content for showing suggestions
 function getWebviewContent() {
-  return `
+    return `
     <html>
       <body>
         <h2>Debugging Suggestions</h2>
@@ -62,8 +66,10 @@ function getWebviewContent() {
       </body>
     </html>
   `;
-}
+  }
 
 module.exports = {
-    createDebuggingPanel
+    createDebuggingPanel,
+    analyzeCode,
+    getWebviewContent
 };
