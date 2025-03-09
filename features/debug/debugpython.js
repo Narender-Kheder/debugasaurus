@@ -44,29 +44,32 @@ function createDebuggingPanel(context) {
 
 // Webview HTML content for showing suggestions
 function getWebviewContent() {
-    return `
-    <html>
-      <body>
-        <h2>Debugging Suggestions</h2>
-        <div id="suggestions"></div>
-        <script>
-          const vscode = acquireVsCodeApi();
+  return `
+  <html>
+    <body>
+      <h2>Debugging Suggestions</h2>
+      <div id="suggestions"></div>
+      <script>
+        const vscode = acquireVsCodeApi();
+        
+        window.addEventListener('message', event => {
+          const suggestions = event.data.suggestions;
+          const suggestionsDiv = document.getElementById('suggestions');
           
-          window.addEventListener('message', event => {
-            const suggestions = event.data.suggestions;
-            const suggestionsDiv = document.getElementById('suggestions');
-            
-            suggestions.forEach(suggestion => {
-              const suggestionElement = document.createElement('div');
-              suggestionElement.textContent = suggestion;
-              suggestionsDiv.appendChild(suggestionElement);
-            });
+          // Clear previous suggestions
+          suggestionsDiv.innerHTML = "";
+
+          suggestions.forEach(suggestion => {
+            const suggestionElement = document.createElement('div');
+            suggestionElement.textContent = suggestion;
+            suggestionsDiv.appendChild(suggestionElement);
           });
-        </script>
-      </body>
-    </html>
-  `;
-  }
+        });
+      </script>
+    </body>
+  </html>
+`;
+}
 
 module.exports = {
     createDebuggingPanel,
