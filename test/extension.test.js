@@ -1,3 +1,5 @@
+jest.mock("vscode");  // Tells Jest to use our mock instead of the real vscode module
+
 const assert = require('assert');
 
 // You can import and use all API from the 'vscode' module
@@ -5,7 +7,7 @@ const assert = require('assert');
 const vscode = require('vscode');
 // const myExtension = require('../extension');
 
-suite('Extension Test Suite', () => {
+describe('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
 	test('Sample test', () => {
@@ -13,3 +15,4 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
 	});
 });
+
