@@ -1,6 +1,5 @@
 const utils = require('../../uitls')
-// @ts-ignore
-const aiPrompts = require('../prompts.json')
+const aiPrompts = require("../prompts.json");
 
 async function completionGeneration ({
   codeBeforeUser,
