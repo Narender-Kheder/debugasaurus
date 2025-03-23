@@ -7,7 +7,7 @@ const utils = require('../../uitls');
 
 // Send code to OpenAI API for analysis
 async function analyzeCode(code) {
-    const response = await utils.queryLLM(`Analyze the following Python code for syntax and runtime errors. Provide a list of identified issues and optional explanations for each:\n\n${code}`);
+    const response = await utils.queryLLM(`Analyze the following code for syntax and runtime errors. Provide a list of identified issues and optional explanations for each:\n\n${code}`);
     //console.log("OpenAI API Response:", JSON.stringify(response.data, null, 2)); // ✅ Debugging Output
     return response.split('\n');
   }
@@ -16,7 +16,7 @@ function createDebuggingPanel(context) {
     return vscode.commands.registerCommand('debugasourus.debugCode', () => {
         const panel = vscode.window.createWebviewPanel(
             'debuggingSuggestions', // Identifies the type of the webview
-            'Debugging Suggestions', // Title of the panel
+            'Coding Suggestions', // Title of the panel
             vscode.ViewColumn.Beside, // View location
             {
             enableScripts: true,
@@ -28,7 +28,7 @@ function createDebuggingPanel(context) {
         
         // Analyze code when user activates the debugging feature
         vscode.workspace.onDidSaveTextDocument(async (document) => {
-            if (document.languageId === 'python') {
+            //if (document.languageId === 'python') {
                 analyzeCode(document.getText())
                 .then(suggestions => {
                 panel.webview.postMessage({ suggestions });
@@ -36,7 +36,7 @@ function createDebuggingPanel(context) {
                 .catch(error => {
                 console.error(error);
                 });
-            }
+            //}
         });
     });
 }
@@ -47,7 +47,7 @@ function getWebviewContent() {
   return `
   <html>
     <body>
-      <h2>Debugging Suggestions</h2>
+      <h2>Code Review</h2>
       <div id="suggestions"></div>
       <script>
         const vscode = acquireVsCodeApi();
