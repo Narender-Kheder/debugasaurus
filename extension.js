@@ -34,7 +34,7 @@ class DebugasourusProvider {
       new DebugasourusItem("Generate Comments", "debugasourus.generateComments"),
       new DebugasourusItem("Refactor Code", "debugasourus.refactorCode"),
       new DebugasourusItem("Optimize Code", "debugasourus.optimizeCode"),
-      new DebugasourusItem("Debug Code", "debugasourus.debugCode")
+      new DebugasourusItem("Code review", "debugasourus.debugCode")
     ];
   }
 }

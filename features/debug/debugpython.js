@@ -16,7 +16,7 @@ function createDebuggingPanel(context) {
     return vscode.commands.registerCommand('debugasourus.debugCode', () => {
         const panel = vscode.window.createWebviewPanel(
             'debuggingSuggestions', // Identifies the type of the webview
-            'Debugging Suggestions', // Title of the panel
+            'Coding Suggestions', // Title of the panel
             vscode.ViewColumn.Beside, // View location
             {
             enableScripts: true,
@@ -47,7 +47,7 @@ function getWebviewContent() {
   return `
   <html>
     <body>
-      <h2>Debugging Suggestions</h2>
+      <h2>Code Review</h2>
       <div id="suggestions"></div>
       <script>
         const vscode = acquireVsCodeApi();
