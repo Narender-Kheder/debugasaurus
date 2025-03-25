@@ -13,7 +13,6 @@ async function runCommand (command) {
       const { stdout } = await execAsync(`cd ${workspacePath} && ${command}`)
       return stdout.trim()
     } catch (error) {
-      console.log(`Execution error: ${error.message}`)
       return `Execution error: ${error.message}`
     }
   }

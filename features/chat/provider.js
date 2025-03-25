@@ -4,7 +4,8 @@ const llm = require('./llmAgent.js')
 const chatInterface = require('./chatInterface.js')
 
 async function provider (context) {
-  await llm.loadApiKey()
+
+  await llm.loadApiKey(context)
   return vscode.commands.registerCommand('debugasourus.startChat', () => {
     const editor = vscode.window.activeTextEditor
     const panel = vscode.window.createWebviewPanel(
@@ -25,31 +26,47 @@ async function provider (context) {
         'IMAGE_PATH',
         'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
       )
+    let previous = panel.webview.html
 
-    panel.webview.postMessage({
-      command: 'detectedApiKey',
-      metadata: { detectedApiKey: llm.apiKeyLoaded() }
+    postApiKey(panel)
+
+    panel.webview.onDidReceiveMessage(async message => {
+      if (message.command === 'switchView') {
+        if (message.view === 'chatInterface') {
+          panel.webview.html = chatInterface
+            .loadHTML('./views/chatInterface.html')
+            .replace(
+              'IMAGE_PATH',
+              'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
+            )
+        }
+        if (message.view === 'settings') {
+          previous = panel.webview.html
+          panel.webview.html = chatInterface
+            .loadHTML('./views/settings.html')
+            .replace(
+              'IMAGE_PATH',
+              'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
+            )
+          postApiKey(panel)
+          await postModelOptions(panel)
+        }
+        if (message.view === 'previous') {
+          panel.webview.html = previous
+        }
+      }
     })
 
-    panel.webview.onDidReceiveMessage(async message =>{
-      switch (message.command) {
-        case 'switchView':
-          if (message.view === 'chatInterface') {
-            panel.webview.html = chatInterface
-              .loadHTML('./views/chatInterface.html')
-              .replace(
-                'IMAGE_PATH',
-                'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
-              )
-          }
-          break
-        case 'apiKeyEntry':
-          console.log("here is the key"+message.key);
-          await llm.uploadApiKey(message.key)
-          panel.webview.postMessage({
-            command: 'detectedApiKey',
-            metadata: { detectedApiKey: llm.apiKeyLoaded() }
-          })
+    panel.webview.onDidReceiveMessage(async message => {
+      if (message.command === 'apiKeyEntry') {
+        await llm.uploadApiKey(context, message.key)
+        await postApiKey(panel)
+        await postModelOptions(panel)
+      }
+      if (message.command === 'setModel') {
+        await llm.uploadModelChoice(context, message.model)
+        await postApiKey(panel)
+        await postModelOptions(panel)
       }
     })
 
@@ -78,6 +95,19 @@ async function provider (context) {
       undefined,
       context.subscriptions
     )
+  })
+}
+
+function postApiKey (panel) {
+  panel.webview.postMessage({
+    command: 'detectedApiKey',
+    metadata: { detectedApiKey: llm.apiKeyLoaded() }
+  })
+}
+async function postModelOptions (panel) {
+  panel.webview.postMessage({
+    command: 'modelOptions',
+    metadata: { running: llm.modelRunning() , options: await llm.loadModelOptions() }
   })
 }
 

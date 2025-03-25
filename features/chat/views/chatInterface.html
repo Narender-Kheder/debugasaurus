@@ -37,7 +37,7 @@
         margin-bottom: 1px;
         align-self: center;
         object-fit: cover;
-        padding-top: 40%;
+        padding-top: 25%;
       }
       .debugasourus-img {
         object-fit: cover;
@@ -168,10 +168,35 @@
         visibility: visible;
         opacity: 1;
       }
+      button {
+        background-color: #1e90ff;
+        color: white;
+        font-size: 18px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #1c7fdd;
+      }
+      button:disabled {
+        background-color: grey;
+        cursor: not-allowed;
+      }
+      .settings_button {
+        display: flex;
+        justify-content: right;
+        font-size: 15px;
+        background-color: black;
+      }
+      .settings_button:hover {
+        background-color: black;
+      }
     </style>
   </head>
   <body>
     <div class="chat-window" id="chat-window">
+      <button id="settingsButton" class="settings_button">Settings</button>
       <div class="image-container">
         <img clas="debugasourus-im" src="IMAGE_PATH" alt="Debugasourus Image" />
       </div>
@@ -225,8 +250,17 @@
       const sendButton = document.getElementById('send-button')
       const sendIcon = document.getElementById('send-icon')
       const loadingIcon = document.getElementById('loading-icon')
+      const settingsButton = document.getElementById('settingsButton')
 
       let isWaitingForResponse = false
+
+      settingsButton.addEventListener('click', function () {
+        try {
+          vscode.postMessage({ command: 'switchView', view: 'settings' })
+        } catch (error) {
+          console.error('Error switching view:', error)
+        }
+      })
 
       //toggle the send and loading indicator
       function setSendButtonState(disabled) {
@@ -332,7 +366,7 @@
           isWaitingForResponse = true
           setSendButtonState(true)
           addLoadingIndicator()
-          
+
           vscode.postMessage({
             command: 'runGitCommand',
             aiGitCommand: aiGitCommand
@@ -340,7 +374,7 @@
         }
       }
 
-      function removeGitCommandButtons(){
+      function removeGitCommandButtons() {
         const existingButtons = document.querySelectorAll('.message-button')
         existingButtons.forEach(button => button.remove())
       }

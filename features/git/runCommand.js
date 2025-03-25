@@ -1,4 +1,4 @@
-const utils = require('../../uitls')
+const utils = require('../../utils')
 
 async function runGitCommand (prompts, aiGitCommand) {
   const commandResults = await utils.runCommand(aiGitCommand)

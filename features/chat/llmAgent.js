@@ -1,4 +1,4 @@
-const utils = require('../../uitls')
+const utils = require('../../utils')
 const git = require('../git')
 // @ts-ignore
 const aiPrompts = require('../prompts.json')
@@ -75,16 +75,25 @@ function addUserQuestion (userMessage) {
     '\n\n\nUse the data above to answer this users question:\n' + userMessage
   )
 }
-async function loadApiKey() {
-  await utils.loadApiKey()
+async function loadApiKey (context) {
+  await utils.loadApiKey(context)
 }
 
-async function uploadApiKey (key) {
-  await utils.uploadApiKey(key)
+async function uploadApiKey (context, key) {
+  await utils.uploadApiKey(context, key)
 }
 
-function apiKeyLoaded() {
+function apiKeyLoaded () {
   return utils.apiKeyLoaded()
+}
+async function loadModelOptions () {
+  return await utils.fetchOpenAIModels()
+}
+function modelRunning () {
+  return utils.modelRunning()
+}
+async function uploadModelChoice (context, modelChoice) {
+  await utils.uploadModelChoice(context, modelChoice)
 }
 
 module.exports = {
@@ -92,5 +101,8 @@ module.exports = {
   runGitCommand,
   loadApiKey,
   apiKeyLoaded,
-  uploadApiKey
+  uploadApiKey,
+  loadModelOptions,
+  modelRunning,
+  uploadModelChoice
 }
