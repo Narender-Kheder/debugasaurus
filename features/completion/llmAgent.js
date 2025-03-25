@@ -1,4 +1,4 @@
-const utils = require('../../uitls')
+const utils = require('../../utils')
 // @ts-ignore
 const aiPrompts = require('../prompts.json')
 

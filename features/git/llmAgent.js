@@ -1,4 +1,4 @@
-const utils = require('../../uitls')
+const utils = require('../../utils')
 
 async function gitAgent (prompts, userMessage, history) {
   const gitContext = await checkGitErrors()
