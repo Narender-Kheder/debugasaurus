@@ -1,5 +1,5 @@
 const vscode = require('vscode')
-const utils = require('../../uitls')
+const utils = require('../../utils')
 const aiPrompts = require('../prompts.json')
 
 async function commentCode() {

@@ -3,7 +3,7 @@
 
 const path = require('path');
 const vscode = require('vscode');
-const utils = require('../../uitls');
+const utils = require('../../utils');
 
 // Send code to OpenAI API for analysis
 async function analyzeCode(code) {
