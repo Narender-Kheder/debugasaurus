@@ -1,129 +1,165 @@
-const vscode = require('vscode');
-const utils = require('../../utils');
-const aiPrompts = require('../prompts.json');
+const vscode = require('vscode')
+const utils = require('../../utils')
+// @ts-ignore
+const aiPrompts = require('../prompts.json')
 
-// Function to optimize code
-async function optimizeCode() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        vscode.window.showErrorMessage("Open a file to optimize code.");
-        return;
-    }
+let deleteCodeCommand = null
+let deleteReplaceCodeCommand = null
+let optimizeMenu = null
+let optimizeMenuHidden = null
 
-    const selectedCode = editor.document.getText(editor.selection);
-    if (!selectedCode.trim()) {
-        vscode.window.showErrorMessage("Select some code to optimize.");
-        return;
-    }
-    const prompts = aiPrompts.optimization;
+async function optimizeCode (context) {
+  const editor = vscode.window.activeTextEditor
+  if (!editor) {
+    vscode.window.showErrorMessage('Open a file to optimize code.')
+    return
+  }
+  const selectedCode = editor.document.getText(editor.selection)
+  if (!selectedCode.trim()) {
+    vscode.window.showErrorMessage('Select some code to optimize.')
+    return
+  }
+  const prompts = aiPrompts.optimization
 
-    try {
-        const response = await utils.queryLLM(prompts.system_prompt + selectedCode);
-        const optimizedCode = response.match(/```(?:python|js|c\+\+|java)?\n([\s\S]*?)```/)?.[1] || response;
+  try {
+    const response = await utils.queryLLM(prompts.system_prompt + selectedCode)
+    const optimizedCode =
+      response.match(/```(?:python|js|c\+\+|java)?\n([\s\S]*?)```/)?.[1] ||
+      response
 
-        // Create the optimization comment
-        const optimizeComment = `\n// 🔧 Suggested Optimization:\n// ${optimizedCode.split("\n").join("\n// ")}\n// 🟢`;
+    let newEditor = await openCustomEditor(
+      editor.document.getText(),
+      editor.document.languageId,
+      editor.selection,
+      optimizedCode
+    )
+    if (deleteCodeCommand) deleteCodeCommand.dispose()
+    deleteCodeCommand = vscode.commands.registerCommand(
+      'debugasourus.deleteOptimizedCode',
+      async () => await deleteOptimizedCode(newEditor)
+    )
 
-        // Insert the optimization comment in the editor
-        editor.edit(editBuilder => {
-            editBuilder.insert(editor.selection.end, optimizeComment);
-        });
+    if (deleteReplaceCodeCommand) deleteReplaceCodeCommand.dispose()
+    deleteReplaceCodeCommand = vscode.commands.registerCommand(
+      'debugasourus.applyOptimizedCode',
+      async () => await applyOptimizedCode(editor, newEditor)
+    )
+    openStatusBarMenu(context)
 
-        vscode.window.showInformationMessage("Optimized code added as a suggestion. Click 'Apply Optimization' to use it.");
-
-    } catch (error) {
-        vscode.window.showErrorMessage("Error optimizing code: " + error.message);
-    }
+    vscode.window.showInformationMessage(
+      'optimize-asourus: You can apply changes from Status Bar'
+    )
+  } catch (error) {
+    vscode.window.showErrorMessage('Error optimizing code: ' + error.message)
+  }
 }
 
-// Function to delete suggested optimization
-async function deleteOptimizedCode() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        vscode.window.showErrorMessage("Open a file to delete optimized code.");
-        return;
-    }
+async function deleteOptimizedCode (newEditor) {
+  await vscode.window.showTextDocument(
+    newEditor.document,
+    newEditor.viewColumn,
+    false
+  )
+  await vscode.commands.executeCommand(
+    'workbench.action.revertAndCloseActiveEditor'
+  )
+}
+async function applyOptimizedCode (oldEditor, newEditor) {
+  const newCode = newEditor.document.getText()
+  const oldDoc = oldEditor.document
 
-    const document = editor.document;
-    const text = document.getText();
-    const match = text.match(/\/\/ 🔧 Suggested Optimization:[\s\S]*?\/\/ 🟢/);
+  const startPos = new vscode.Position(0, 0)
+  const endPos = oldDoc.lineAt(oldDoc.lineCount - 1).range.end
+  const fullRange = new vscode.Range(startPos, endPos)
 
-    if (match) {
-        const startLine = document.positionAt(match.index).line;
-        const endLine = document.positionAt(match.index + match[0].length).line;
+  await oldEditor.edit(editBuilder => {
+    editBuilder.replace(fullRange, newCode)
+  })
 
-        // Delete the matched optimization comments
-        editor.edit(editBuilder => {
-            editBuilder.delete(new vscode.Range(startLine, 0, endLine + 1, 0)); // +1 to include the line with // 🟢
-        });
-
-        vscode.window.showInformationMessage("Suggested optimization deleted successfully!");
-    } else {
-        vscode.window.showErrorMessage("No suggested optimization found to delete.");
-    }
+  deleteOptimizedCode(newEditor)
 }
 
-// Function to apply optimized code
-function applyOptimizedCode() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
+async function openCustomEditor (
+  content,
+  languageId = 'plaintext',
+  selection,
+  newContent
+) {
+  let doc = await vscode.workspace.openTextDocument(
+    vscode.Uri.parse(`untitled:Optimize-asourus`)
+  )
+  doc = await vscode.languages.setTextDocumentLanguage(doc, languageId)
+  const editor = await vscode.window.showTextDocument(doc, {
+    preview: false,
+    viewColumn: vscode.ViewColumn.Beside
+  })
 
-    const document = editor.document;
-    const text = document.getText();
-    const match = text.match(/\/\/ 🔧 Suggested Optimization:\s*([\s\S]*?)\s*\/\/ 🟢/);
+  await editor.edit(editBuilder => {
+    const lastLine = doc.lineCount - 1
+    editBuilder.delete(
+      new vscode.Range(0, 0, lastLine, doc.lineAt(lastLine).text.length)
+    )
+  })
 
-    if (match) {
-        const optimizedCode = match[1]
-            .split("\n")
-            .map(line => line.replace(/^\/\/\s?/, "")) // Remove comment markers
-            .join("\n");
-
-        editor.edit(editBuilder => {
-            editBuilder.replace(editor.selection, optimizedCode);
-        }).then(success => {
-            if (success) {
-                vscode.window.showInformationMessage("Optimized code applied successfully!");
-            } else {
-                vscode.window.showErrorMessage("Failed to apply optimized code.");
-            }
-        });
-    } else {
-        vscode.window.showErrorMessage("No optimized code found.");
-    }
+  await editor.edit(editBuilder => {
+    editBuilder.insert(new vscode.Position(0, 0), content)
+  })
+  await editor.edit(editBuilder => {
+    editBuilder.replace(selection, newContent)
+  })
+  return editor
 }
 
-// CodeLens provider for suggested optimizations
-class OptimizeCodeLensProvider {
-    provideCodeLenses(document, token) {
-        const lenses = [];
-        const text = document.getText();
+function openStatusBarMenu (context) {
+  const statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    100
+  )
+  optimizeMenuHidden = statusBarItem
+  statusBarItem.text = '$(tools) Optimize-asourus Options'
+  statusBarItem.tooltip = 'Click to apply optimize'
+  statusBarItem.command = 'extension.showOptimizeOptions'
+  statusBarItem.show()
 
-        if (text.includes("// 🔧 Suggested Optimization:")) {
-            const line = text.indexOf("// 🔧 Suggested Optimization:");
-            const position = document.positionAt(line);
-            lenses.push(new vscode.CodeLens(new vscode.Range(position.line, 0, position.line, 0), {
-                title: "🛠️ Apply Optimization",
-                command: "debugasourus.applyOptimizedCode"
-            }));
-            lenses.push(new vscode.CodeLens(new vscode.Range(position.line + 1, 0, position.line + 1, 0), {
-                title: "❌ Delete Optimization",
-                command: "debugasourus.deleteOptimizedCode"
-            }));
+  if (optimizeMenu) optimizeMenu.dispose()
+  optimizeMenu = vscode.commands.registerCommand(
+    'extension.showOptimizeOptions',
+    async () => {
+      const selection = await vscode.window.showQuickPick(
+        ['Apply', 'Discard'],
+        {
+          placeHolder: 'Choose a optimize action'
         }
-
-        return lenses;
+      )
+      if (!selection) {
+        return
+      }
+      if (selection === 'Apply') {
+        vscode.window.showInformationMessage('Optimize-asourus: Apply selected')
+        vscode.commands.executeCommand('debugasourus.applyOptimizedCode')
+      } else if (selection === 'Discard') {
+        vscode.window.showInformationMessage('Optimize-asourus: Discard selected')
+        vscode.commands.executeCommand('debugasourus.deleteOptimizedCode')
+      }
+      statusBarItem.hide()
     }
+  )
+
+  context.subscriptions.push(statusBarItem, optimizeMenu)
 }
 
-// Register commands and providers
-const optimize = vscode.commands.registerCommand("debugasourus.optimizeCode", optimizeCode);
-const applyOptimize = vscode.commands.registerCommand("debugasourus.applyOptimizedCode", applyOptimizedCode);
-const deleteOptimize = vscode.commands.registerCommand("debugasourus.deleteOptimizedCode", deleteOptimizedCode);
-const optimizeCodeLensProvider = vscode.languages.registerCodeLensProvider("*", new OptimizeCodeLensProvider());
+vscode.workspace.onDidCloseTextDocument((document) => {
+    if (optimizeMenuHidden && document.uri.toString() === 'untitled:Optimize-asourus') {
+      optimizeMenuHidden.hide()
+    }
+  });
 
+async function optimize (context) {
+  return vscode.commands.registerCommand(
+    'debugasourus.optimizeCode',
+    async () => optimizeCode(context)
+  )
+}
 module.exports = {
-    optimize,
-    applyOptimize,
-    deleteOptimize,
-    optimizeCodeLensProvider
-};
+  optimize
+}

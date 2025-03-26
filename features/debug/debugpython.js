@@ -1,78 +1,70 @@
-// Description: This file contains the code to create a debugging panel for Python code in the extension.
-// The debugging panel will display suggestions for debugging Python code based on the analysis of the code.
+const vscode = require('vscode')
+const utils = require('../../utils')
 
-const path = require('path');
-const vscode = require('vscode');
-const utils = require('../../utils');
+const provider = vscode.commands.registerCommand(
+  'debugasourus.debugCode',
+  async () => {
+    const editor = vscode.window.activeTextEditor
+    if (!editor) {
+      vscode.window.showInformationMessage('No active editor found.')
+      return
+    }
+    const document = editor.document
 
-// Send code to OpenAI API for analysis
-async function analyzeCode(code) {
-    const response = await utils.queryLLM(`Analyze the following code for syntax and runtime errors. Provide a list of identified issues and optional explanations for each:\n\n${code}`);
-    //console.log("OpenAI API Response:", JSON.stringify(response.data, null, 2)); // ✅ Debugging Output
-    return response.split('\n');
+    const panel = vscode.window.createWebviewPanel(
+      'debuggingSuggestions',
+      'Coding Suggestions',
+      vscode.ViewColumn.Beside,
+      {
+        enableScripts: true
+      }
+    )
+    panel.webview.html = utils
+      .loadHTML('./features/debug/view.html')
+      .replace(
+        'IMAGE_PATH',
+        'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
+      )
+
+    await analyzeCodeWithPost(document, panel)
+
+    // Analyze code when user activates the debugging feature
+    vscode.workspace.onDidSaveTextDocument(
+      async document => await analyzeCodeWithPost(document, panel)
+    )
   }
-// Create a new Webview Panel to display the debugging suggestions
-function createDebuggingPanel(context) {
-    return vscode.commands.registerCommand('debugasourus.debugCode', () => {
-        const panel = vscode.window.createWebviewPanel(
-            'debuggingSuggestions', // Identifies the type of the webview
-            'Coding Suggestions', // Title of the panel
-            vscode.ViewColumn.Beside, // View location
-            {
-            enableScripts: true,
-            }
-        );
-        console.log("Debugging Panel Created"); // ✅ Debugging Output
-        // Set the HTML content for the Webview
-        panel.webview.html = getWebviewContent();
-        
-        // Analyze code when user activates the debugging feature
-        vscode.workspace.onDidSaveTextDocument(async (document) => {
-            //if (document.languageId === 'python') {
-                analyzeCode(document.getText())
-                .then(suggestions => {
-                panel.webview.postMessage({ suggestions });
-                })
-                .catch(error => {
-                console.error(error);
-                });
-            //}
-        });
-    });
+)
+
+async function analyzeCodeWithPost (document, panel) {
+  vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: 'Code Review-saurus is thinking... and possibly roaring',
+      cancellable: false
+    },
+    () => {
+      return new Promise(async resolve => {
+        await analyzeCode(document.getText())
+          .then(suggestions => {
+            panel.webview.postMessage({ suggestions })
+          })
+          .catch(error => {
+            console.error(error)
+          })
+        resolve()
+      })
+    }
+  )
 }
 
-
-// Webview HTML content for showing suggestions
-function getWebviewContent() {
-  return `
-  <html>
-    <body>
-      <h2>Code Review</h2>
-      <div id="suggestions"></div>
-      <script>
-        const vscode = acquireVsCodeApi();
-        
-        window.addEventListener('message', event => {
-          const suggestions = event.data.suggestions;
-          const suggestionsDiv = document.getElementById('suggestions');
-          
-          // Clear previous suggestions
-          suggestionsDiv.innerHTML = "";
-
-          suggestions.forEach(suggestion => {
-            const suggestionElement = document.createElement('div');
-            suggestionElement.textContent = suggestion;
-            suggestionsDiv.appendChild(suggestionElement);
-          });
-        });
-      </script>
-    </body>
-  </html>
-`;
+async function analyzeCode (code) {
+  console.log('analyze code started')
+  const response = await utils.queryLLM(
+    `Analyze the following code for syntax and runtime errors. Provide a list of identified issues and optional explanations for each:\n\n${code}`
+  )
+  return response.split('\n')
 }
 
 module.exports = {
-    createDebuggingPanel,
-    analyzeCode,
-    getWebviewContent
-};
+  provider
+}

@@ -25,7 +25,7 @@ async function testQueryFailure () {
   return (
     (await queryLLM(
       "your job is to return the word 'yes'. Return only the word 'yes', nothing else."
-    )) !== 'yes'
+    )).toLowerCase() !== 'yes'
   )
 }
 

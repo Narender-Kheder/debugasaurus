@@ -1,129 +1,165 @@
-const vscode = require('vscode');
-const utils = require('../../utils');
-const aiPrompts = require('../prompts.json');
+const vscode = require('vscode')
+const utils = require('../../utils')
+// @ts-ignore
+const aiPrompts = require('../prompts.json')
 
-// Function to refactor code
-async function refactorCode() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        vscode.window.showErrorMessage("Open a file to refactor code.");
-        return;
-    }
+let deleteCodeCommand = null
+let deleteReplaceCodeCommand = null
+let refactorMenu = null
+let refactorMenuHidden = null
 
-    const selectedCode = editor.document.getText(editor.selection);
-    if (!selectedCode.trim()) {
-        vscode.window.showErrorMessage("Select some code to refactor.");
-        return;
-    }
-    const prompts = aiPrompts.refactor;
+async function refactorCode (context) {
+  const editor = vscode.window.activeTextEditor
+  if (!editor) {
+    vscode.window.showErrorMessage('Open a file to refactor code.')
+    return
+  }
+  const selectedCode = editor.document.getText(editor.selection)
+  if (!selectedCode.trim()) {
+    vscode.window.showErrorMessage('Select some code to refactor.')
+    return
+  }
+  const prompts = aiPrompts.refactor
 
-    try {
-        const response = await utils.queryLLM(prompts.system_prompt + selectedCode);
-        const refactoredCode = response.match(/```(?:python|js|c\+\+|java)?\n([\s\S]*?)```/)?.[1] || response;
+  try {
+    const response = await utils.queryLLM(prompts.system_prompt + selectedCode)
+    const refactoredCode =
+      response.match(/```(?:python|js|c\+\+|java)?\n([\s\S]*?)```/)?.[1] ||
+      response
 
-        // Create the refactor comment
-        const refactorComment = `\n// 🔧 Suggested Refactor:\n// ${refactoredCode.split("\n").join("\n// ")}\n// 🟢`;
+    let newEditor = await openCustomEditor(
+      editor.document.getText(),
+      editor.document.languageId,
+      editor.selection,
+      refactoredCode
+    )
+    if (deleteCodeCommand) deleteCodeCommand.dispose()
+    deleteCodeCommand = vscode.commands.registerCommand(
+      'debugasourus.deleteRefactoredCode',
+      async () => await deleteRefactoredCode(newEditor)
+    )
 
-        // Insert the refactor comment in the editor
-        editor.edit(editBuilder => {
-            editBuilder.insert(editor.selection.end, refactorComment);
-        });
+    if (deleteReplaceCodeCommand) deleteReplaceCodeCommand.dispose()
+    deleteReplaceCodeCommand = vscode.commands.registerCommand(
+      'debugasourus.applyRefactoredCode',
+      async () => await applyRefactoredCode(editor, newEditor)
+    )
+    openStatusBarMenu(context)
 
-        vscode.window.showInformationMessage("Refactored code added as a suggestion. Click 'Apply Refactor' to use it.");
-
-    } catch (error) {
-        vscode.window.showErrorMessage("Error refactoring code: " + error.message);
-    }
+    vscode.window.showInformationMessage(
+      'Refactor-asourus: You can apply changes from Status Bar'
+    )
+  } catch (error) {
+    vscode.window.showErrorMessage('Error refactoring code: ' + error.message)
+  }
 }
 
-// Function to delete suggested refactor
-async function deleteRefactoredCode() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        vscode.window.showErrorMessage("Open a file to delete refactored code.");
-        return;
-    }
+async function deleteRefactoredCode (newEditor) {
+  await vscode.window.showTextDocument(
+    newEditor.document,
+    newEditor.viewColumn,
+    false
+  )
+  await vscode.commands.executeCommand(
+    'workbench.action.revertAndCloseActiveEditor'
+  )
+}
+async function applyRefactoredCode (oldEditor, newEditor) {
+  const newCode = newEditor.document.getText()
+  const oldDoc = oldEditor.document
 
-    const document = editor.document;
-    const text = document.getText();
-    const match = text.match(/\/\/ 🔧 Suggested Refactor:[\s\S]*?\/\/ 🟢/);
+  const startPos = new vscode.Position(0, 0)
+  const endPos = oldDoc.lineAt(oldDoc.lineCount - 1).range.end
+  const fullRange = new vscode.Range(startPos, endPos)
 
-    if (match) {
-        const startLine = document.positionAt(match.index).line;
-        const endLine = document.positionAt(match.index + match[0].length).line;
+  await oldEditor.edit(editBuilder => {
+    editBuilder.replace(fullRange, newCode)
+  })
 
-        // Delete the matched refactor comments
-        editor.edit(editBuilder => {
-            editBuilder.delete(new vscode.Range(startLine, 0, endLine + 1, 0)); // +1 to include the line with // 🟢
-        });
-
-        vscode.window.showInformationMessage("Suggested refactor deleted successfully!");
-    } else {
-        vscode.window.showErrorMessage("No suggested refactor found to delete.");
-    }
+  deleteRefactoredCode(newEditor)
 }
 
-// Function to apply refactored code
-function applyRefactoredCode() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
+async function openCustomEditor (
+  content,
+  languageId = 'plaintext',
+  selection,
+  newContent
+) {
+  let doc = await vscode.workspace.openTextDocument(
+    vscode.Uri.parse(`untitled:Refector-asourus`)
+  )
+  doc = await vscode.languages.setTextDocumentLanguage(doc, languageId)
+  const editor = await vscode.window.showTextDocument(doc, {
+    preview: false,
+    viewColumn: vscode.ViewColumn.Beside
+  })
 
-    const document = editor.document;
-    const text = document.getText();
-    const match = text.match(/\/\/ 🔧 Suggested Refactor:\s*([\s\S]*?)\s*\/\/ 🟢/);
+  await editor.edit(editBuilder => {
+    const lastLine = doc.lineCount - 1
+    editBuilder.delete(
+      new vscode.Range(0, 0, lastLine, doc.lineAt(lastLine).text.length)
+    )
+  })
 
-    if (match) {
-        const refactoredCode = match[1]
-            .split("\n")
-            .map(line => line.replace(/^\/\/\s?/, "")) // Remove comment markers
-            .join("\n");
-
-        editor.edit(editBuilder => {
-            editBuilder.replace(editor.selection, refactoredCode);
-        }).then(success => {
-            if (success) {
-                vscode.window.showInformationMessage("Refactored code applied successfully!");
-            } else {
-                vscode.window.showErrorMessage("Failed to apply refactored code.");
-            }
-        });
-    } else {
-        vscode.window.showErrorMessage("No refactored code found.");
-    }
+  await editor.edit(editBuilder => {
+    editBuilder.insert(new vscode.Position(0, 0), content)
+  })
+  await editor.edit(editBuilder => {
+    editBuilder.replace(selection, newContent)
+  })
+  return editor
 }
 
-// CodeLens provider for suggested refactors
-class RefactorCodeLensProvider {
-    provideCodeLenses(document, token) {
-        const lenses = [];
-        const text = document.getText();
+function openStatusBarMenu (context) {
+  const statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    100
+  )
+  refactorMenuHidden = statusBarItem
+  statusBarItem.text = '$(tools) Refactor-asourus Options'
+  statusBarItem.tooltip = 'Click to apply refactor'
+  statusBarItem.command = 'extension.showRefactorOptions'
+  statusBarItem.show()
 
-        if (text.includes("// 🔧 Suggested Refactor:")) {
-            const line = text.indexOf("// 🔧 Suggested Refactor:");
-            const position = document.positionAt(line);
-            lenses.push(new vscode.CodeLens(new vscode.Range(position.line, 0, position.line, 0), {
-                title: "🛠️ Apply Refactor",
-                command: "debugasourus.applyRefactoredCode"
-            }));
-            lenses.push(new vscode.CodeLens(new vscode.Range(position.line + 1, 0, position.line + 1, 0), {
-                title: "❌ Delete Refactor",
-                command: "debugasourus.deleteRefactoredCode"
-            }));
+  if (refactorMenu) refactorMenu.dispose()
+  refactorMenu = vscode.commands.registerCommand(
+    'extension.showRefactorOptions',
+    async () => {
+      const selection = await vscode.window.showQuickPick(
+        ['Apply', 'Discard'],
+        {
+          placeHolder: 'Choose a refactor action'
         }
-
-        return lenses;
+      )
+      if (!selection) {
+        return
+      }
+      if (selection === 'Apply') {
+        vscode.window.showInformationMessage('Refactor-asourus: Apply selected')
+        vscode.commands.executeCommand('debugasourus.applyRefactoredCode')
+      } else if (selection === 'Discard') {
+        vscode.window.showInformationMessage('Refactor-asourus: Discard selected')
+        vscode.commands.executeCommand('debugasourus.deleteRefactoredCode')
+      }
+      statusBarItem.hide()
     }
+  )
+
+  context.subscriptions.push(statusBarItem, refactorMenu)
 }
 
-// Register commands and providers
-const refactor = vscode.commands.registerCommand("debugasourus.refactorCode", refactorCode);
-const applyRefactor = vscode.commands.registerCommand("debugasourus.applyRefactoredCode", applyRefactoredCode);
-const deleteRefactor = vscode.commands.registerCommand("debugasourus.deleteRefactoredCode", deleteRefactoredCode);
-const refactorCodeLensProvider = vscode.languages.registerCodeLensProvider("*", new RefactorCodeLensProvider());
+vscode.workspace.onDidCloseTextDocument((document) => {
+    if (refactorMenuHidden && document.uri.toString() === 'untitled:Refector-asourus') {
+      refactorMenuHidden.hide()
+    }
+  });
 
+async function refactor (context) {
+  return vscode.commands.registerCommand(
+    'debugasourus.refactorCode',
+    async () => refactorCode(context)
+  )
+}
 module.exports = {
-    refactor,
-    applyRefactor,
-    deleteRefactor,
-    refactorCodeLensProvider
-};
+  refactor
+}

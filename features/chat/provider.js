@@ -1,7 +1,7 @@
 const path = require('path')
 const vscode = require('vscode')
 const llm = require('./llmAgent.js')
-const chatInterface = require('./chatInterface.js')
+const utils = require('../../utils')
 
 async function provider (context) {
 
@@ -20,8 +20,8 @@ async function provider (context) {
         ]
       }
     )
-    panel.webview.html = chatInterface
-      .loadHTML('./views/homepage.html')
+    panel.webview.html = utils
+      .loadHTML('./features/chat/views/homepage.html')
       .replace(
         'IMAGE_PATH',
         'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
@@ -33,8 +33,8 @@ async function provider (context) {
     panel.webview.onDidReceiveMessage(async message => {
       if (message.command === 'switchView') {
         if (message.view === 'chatInterface') {
-          panel.webview.html = chatInterface
-            .loadHTML('./views/chatInterface.html')
+          panel.webview.html = utils
+            .loadHTML('./features/chat/views/chatInterface.html')
             .replace(
               'IMAGE_PATH',
               'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
@@ -42,8 +42,8 @@ async function provider (context) {
         }
         if (message.view === 'settings') {
           previous = panel.webview.html
-          panel.webview.html = chatInterface
-            .loadHTML('./views/settings.html')
+          panel.webview.html = utils
+            .loadHTML('./features/chat/views/settings.html')
             .replace(
               'IMAGE_PATH',
               'https://narender-kheder.github.io/debugasaurus/features/chat/views/images/debugasourus.png'
