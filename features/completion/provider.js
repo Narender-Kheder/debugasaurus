@@ -28,8 +28,8 @@ const provider = vscode.commands.registerCommand(
             userLine,
             codeAfterUser
           })
-
           showCodeOptions(editor, aiSuggestion)
+          
           resolve()
         })
       }
@@ -63,7 +63,7 @@ function showCodeOptions (editor, aiSuggestion) {
     },
     {
       label: 'Cancel',
-      description: 'The ultimate completion'
+      description: 'Hope to roar with you again'
     }
   ]
 
