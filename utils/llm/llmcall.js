@@ -22,11 +22,10 @@ async function queryLLM (userMessage) {
 }
 
 async function testQueryFailure () {
-  return (
-    (await queryLLM(
-      "your job is to return the word 'yes'. Return only the word 'yes', nothing else."
-    )).toLowerCase() !== 'yes'
+  const query = await queryLLM(
+    "your job is to return the word 'yes'. Return only the word 'yes', nothing else."
   )
+  return query.toLowerCase() !== 'yes'
 }
 
 async function apiKeyCheck () {
@@ -39,15 +38,18 @@ async function modelCheck () {
 
 async function loadApiKey (context) {
   apiKey = await secrets.getSecret(context, 'DEBUGASAURUS_OPENAI_API_KEY')
-  model = await secrets.getSecret(context, 'DEBUGASAURUS_OPENAI_MODEL')
+  let loadedModel = await secrets.getSecret(
+    context,
+    'DEBUGASAURUS_OPENAI_MODEL'
+  )
+  if (loadedModel) model = loadedModel
   if (apiKey) await apiKeyCheck()
 }
 
 async function uploadApiKey (context, key) {
   apiKey = key
   await apiKeyCheck()
-  if (apiKeyLoaded())
-    secrets.storeSecret(context, 'DEBUGASAURUS_OPENAI_API_KEY', key)
+  if (!!apiKey) secrets.storeSecret(context, 'DEBUGASAURUS_OPENAI_API_KEY', key)
 }
 
 async function uploadModelChoice (context, modelChoice) {
