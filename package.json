@@ -3,9 +3,19 @@
   "displayName": "debugasourus",
   "description": "",
   "version": "0.0.1",
+  "publisher": "Debugasourus-uoft-2025",
   "engines": {
     "vscode": "^1.95.0"
   },
+  "icon": "resources/debugasourus.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Narender-Kheder/debugasaurus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Narender-Kheder/debugasaurus/issues"
+  },
+  "homepage": "https://github.com/Narender-Kheder/debugasaurus#readme",
   "categories": [
     "Other"
   ],
@@ -20,7 +30,7 @@
         {
           "id": "debugasourusView",
           "title": "Debugasourus",
-          "icon": "resources/icon.png"
+          "icon": "resources/rex.png"
         }
       ]
     },
@@ -87,8 +97,5 @@
     "dompurify": "^3.2.4",
     "dotenv": "^16.4.7",
     "marked": "^15.0.7"
-  },
-  "files": [
-    "features/**"
-  ]
+  }
 }
