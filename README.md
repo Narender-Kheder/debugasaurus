@@ -53,5 +53,45 @@ The Chatasaurus feature provides two distinct capabilities to enhance your workf
 
 ---
 
+#### 3. Code Refactor Feature
+- **Seamless Integration:**  
+  Initiate code refactoring directly from the Debugasaurus side menu. This feature is designed to help you improve your code’s structure without altering its external behavior, making it easier to maintain and extend.
+- **Interactive Suggestions:**  
+  Upon selecting a portion of your code, Debugasaurus analyzes it and provides intelligent refactoring suggestions. These suggestions are presented in a new, adjacent code editor, giving you a side-by-side view of your original code and the proposed improvements.
+- **User-Controlled Application:**  
+  With the refactoring suggestions in place, you can choose to either apply the changes or dismiss them. The Refactor-asourus menu in the status bar offers clear options, ensuring that you maintain full control over how and when your code is modified.
+
+---
+
+### 4. Code Optimize Feature
+- **Smart Optimization:**  
+  This feature works similarly to the refactoring tool but focuses on enhancing your code’s performance and readability. By selecting a segment of code, you receive tailored optimization recommendations that can lead to more efficient execution.
+- **Side-by-Side Preview:**  
+  Optimization suggestions are displayed in a dedicated side window, allowing you to compare the original code with the optimized version. This clear layout helps you understand the changes and their impact on your code’s performance.
+- **Effortless Decision-Making:**  
+  The Optimize-asourus menu in the status bar provides simple, actionable choices—apply the optimization or reject it—so you can seamlessly integrate performance improvements without disrupting your workflow.
+
+---
+
+### 5. Code Comment Feature
+- **Automated Comment Generation:**  
+  Debugasaurus simplifies the task of documentation by automatically generating descriptive comments for your code. Whether you select a block of code or run the command on a single line, the tool crafts contextually appropriate comments to explain what the code does.
+- **Context-Aware Insertion:**  
+  The generated comment is inserted directly above the targeted code, ensuring that the explanation is both visible and relevant. This placement enhances the clarity of your code without interrupting its flow.
+- **Easy Access via Side Panel:**  
+  Trigger the Code Comment feature effortlessly from the Debugasaurus side panel, making it convenient to add meaningful commentary as you code.
+
+---
+
+### 6. Code Review Feature
+- **Thorough Analysis:**  
+  Receive an in-depth review of your code by running the Code Review feature from the Debugasaurus side menu. The tool examines your code for potential issues, stylistic inconsistencies, and areas for improvement, ensuring adherence to best practices.
+- **Dedicated Review Display:**  
+  When the review command is executed, a new display area opens on the side of your editor. Here, Debugasaurus presents its detailed analysis, highlighting potential problems and suggesting refinements in an organized and easy-to-read format.
+- **Actionable Feedback:**  
+  The review not only identifies issues but also offers concrete, actionable recommendations for enhancing your code. This comprehensive feedback enables you to systematically improve code quality and maintain consistency throughout your project.
+
+---
+
 Thank you for using Debugasaurus! We hope it becomes an indispensable part of your development workflow. Feedback and contributions are welcome to help us improve further!
 
